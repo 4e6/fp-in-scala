@@ -1,6 +1,6 @@
 package the4e6.fpinscala
 
-trait Chapter1 {
+trait Chapter2 {
 
   case class Box(height: Double, width: Double)
 
@@ -94,4 +94,4 @@ trait Chapter1 {
   }
 }
 
-object chapter1 extends Chapter1
+object ch2 extends Chapter2
