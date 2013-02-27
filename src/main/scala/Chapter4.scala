@@ -1,7 +1,6 @@
 package the4e6.fpinscala
 
-import java.util.regex.Pattern
-import java.util.regex.PatternSyntaxException
+import java.util.regex.{ Pattern, PatternSyntaxException }
 
 trait Chapter4 {
 
@@ -19,7 +18,6 @@ trait Chapter4 {
 
     def flatMap[B](f: A => Option[B]): Option[B] =
       this map f getOrElse None
-
 
     def orElse[B >: A](ob: Option[B]): Option[B] =
       this map Some.apply getOrElse ob
@@ -74,12 +72,81 @@ trait Chapter4 {
     }
 
   def sequence[A](a: List[Option[A]]): Option[List[A]] =
-    a.foldRight(Some(Nil): Option[List[A]]) { (o, acc) =>
+    a.foldRight(Some(Nil): Option[List[A]]) { (o, acc) => map2(o, acc)(_ :: _) }
+
+  // Ecxercise 6
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] =
+    a.foldRight(Some(Nil): Option[List[B]]) { (a, acc) =>
       for {
-        x <- o
+        b <- f(a)
         xs <- acc
-      } yield x :: xs
+      } yield b :: xs
     }
+
+  sealed trait Either[+E, +A] {
+    // Excercise 7
+    def map[B](f: A => B): Either[E, B] = this match {
+      case Left(e) => Left(e)
+      case Right(a) => Right(f(a))
+    }
+
+    def flatMap[EE >: E, B](f: A => Either[EE, B]): Either[EE, B] = this match {
+      case Left(e) => Left(e)
+      case Right(a) => f(a)
+    }
+
+    def orElse[EE >: E, B >: A](b: => Either[EE, B]): Either[EE, B] = this match {
+      case Left(e) => b
+      case Right(a) => Right(a)
+    }
+
+    def map2[EE >: E, B, C](b: => Either[EE, B])(f: (A, B) => C): Either[EE, C] =
+      for {
+        aa <- this
+        bb <- b
+      } yield f(aa, bb)
+  }
+
+  case class Left[+E](value: E) extends Either[E, Nothing]
+  case class Right[+A](value: A) extends Either[Nothing, A]
+
+  // Excercise 8
+  object Eihter {
+    def sequence0[E, A](a: List[Either[E, A]]): Either[E, List[A]] =
+      a.foldRight(Right(Nil): Either[E, List[A]]) { (a, acc) => a.map2(acc)(_ :: _) }
+
+    def traverse[E, A, B](a: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
+      a.foldRight(Right(Nil): Either[E, List[B]]) { (a, acc) => f(a).map2(acc)(_ :: _) }
+
+    def sequence[E, A](a: List[Either[E, A]]): Either[E, List[A]] =
+      traverse(a)(identity)
+  }
+
+  // Excercise 9
+  case class Person(name: Name, age: Age)
+  sealed class Name(val value: String)
+  sealed class Age(val value: Int)
+
+  type V[+E, +A] = Either[List[E], A]
+
+  def vmap2[E, EE >: E, A, B, C](a: V[EE, A], b: V[EE, B])(f: (A, B) => C): V[EE, C] =
+    (a, b) match {
+      case (Left(e1), Left(e2)) => Left(e1 ++ e2)
+      case (Left(e1), Right(_)) => Left(e1)
+      case (Right(_), Left(e2)) => Left(e2)
+      case (Right(a1), Right(a2)) => Right(f(a1, a2))
+    }
+
+  def mkName(name: String): V[String, Name] =
+    if (name == "" || name == null) Left(List("Name is empty."))
+    else Right(new Name(name))
+
+  def mkAge(age: Int): V[String, Age] =
+    if (age < 0) Left(List("Age is out of range."))
+    else Right(new Age(age))
+
+  def mkPerson(name: String, age: Int): V[String, Person] =
+    vmap2(mkName(name), mkAge(age))(Person)
 }
 
 object ch4 extends Chapter4
