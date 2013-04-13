@@ -78,6 +78,34 @@ trait Chapter5 {
           } yield f(a, b) -> (t1, t2)
       }
 
+    def zipAll[B, C](s: Stream[B])(f: (Option[A], Option[B]) => C): Stream[C] = {
+      val a = this map (Some(_)) append constant(None)
+      val b = s map (Some(_)) append constant(None)
+      unfold(a -> b) {
+        case (a, b) if a.isEmpty && b.isEmpty => None
+        case (a, b) =>
+          val (h1, t1) = a.uncons.get
+          val (h2, t2) = b.uncons.get
+          Some((f(h1, h2), (t1, t2)))
+      }
+    }
+
+    // Exercise 14
+    def tails: Stream[Stream[A]] = {
+      val ts = unfold(this) {
+        _.uncons map {
+          case (h, t) => t -> t
+        }
+      }
+      cons(this, ts)
+    }
+
+    // Exercise 15
+    def scanRight[B](z: => B)(f: (A, => B) => B): Stream[B] =
+      foldRight(z -> Stream(z)) { case (a, (z, zs)) =>
+        val x = f(a, z)
+        x -> cons(x, zs)
+      } _2
   }
 
   object Stream {
@@ -136,6 +164,15 @@ trait Chapter5 {
 
   object unfolded extends WithUnfold
 
+  // Exercise 13
+  def startsWith[A](s: Stream[A], s2: Stream[A]): Boolean =
+    s.zipAll(s2)(_ -> _).takeWhile(!_._2.isEmpty) forAll {
+      case (Some(h), Some(h2)) if h == h2 => true
+      case _ => false
+    }
+
+  def hasSubsequence[A](s1: Stream[A], s2: Stream[A]): Boolean =
+    s1.tails exists (startsWith(_, s2))
 }
 
 object ch5 extends Chapter5
