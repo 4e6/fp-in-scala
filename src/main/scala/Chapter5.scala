@@ -8,7 +8,7 @@ trait Chapter5 {
     def uncons: Option[(A, Stream[A])]
     def isEmpty: Boolean = uncons.isEmpty
 
-    // Excercise 1
+    // Exercise 1
     def toList: List[A] =
       if (isEmpty) Nil
       else {
@@ -16,7 +16,7 @@ trait Chapter5 {
         h :: t.toList
       }
 
-    // Excercise 2
+    // Exercise 2
     def take(n: Int): Stream[A] =
       if (n <= 0 || isEmpty) empty
       else {
@@ -24,13 +24,13 @@ trait Chapter5 {
         cons(h, t.take(n - 1))
       }
 
-    // Excercise 3
+    // Exercise 3
     def takeWhile(p: A => Boolean): Stream[A] = uncons match {
       case Some((h, t)) if p(h) => cons(h, t takeWhile p)
       case _ => empty
     }
 
-    // Excercise 4
+    // Exercise 4
     def foldRight[B](z: => B)(f: (A, => B) => B): B =
       uncons match {
         case Some((h, t)) => f(h, t.foldRight(z)(f))
@@ -43,11 +43,11 @@ trait Chapter5 {
     def forAll(p: A => Boolean): Boolean =
       foldRight(true)(p(_) && _)
 
-    // Excercise 5
+    // Exercise 5
     def takeWhilef(p: A => Boolean): Stream[A] =
       foldRight(empty[A])((a, as) => if (p(a)) cons(a, as) else empty)
 
-    // Excercise 6
+    // Exercise 6
     def map[B](f: A => B): Stream[B] =
       foldRight(empty[B])((a, as) => cons(f(a), as))
 
@@ -60,7 +60,7 @@ trait Chapter5 {
     def flatMap[B](f: A => Stream[B]): Stream[B] =
       foldRight(empty[B])((a, as) => f(a) append as)
 
-    // Excercise 12
+    // Exercise 12
     def mapU[B](f: A => B): Stream[B] =
       unfold(this)(s => s.uncons.map { case (h, t) => f(h) -> t })
 
@@ -96,15 +96,15 @@ trait Chapter5 {
   def ones: Stream[Int] =
     Stream.cons(1, ones)
 
-  // Excercise 7
+  // Exercise 7
   def constant[A](a: A): Stream[A] =
     Stream.cons(a, constant(a))
 
-  // Excercise 8
+  // Exercise 8
   def from(n: Int): Stream[Int] =
     Stream.cons(n, from(n + 1))
 
-  // Excercise 9
+  // Exercise 9
   def fibs: Stream[Int] = {
     import Stream._
     def recur(a: Int, b: Int): Stream[Int] =
@@ -113,14 +113,14 @@ trait Chapter5 {
     cons(0, recur(0, 1))
   }
 
-  // Excercise 10
+  // Exercise 10
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
     f(z).fold(Stream.empty[A]) {
       case (a, s) => Stream.cons(a, unfold(s)(f))
     }
 
   trait WithUnfold {
-    // Excercise 11
+    // Exercise 11
     def fibs: Stream[Int] =
       unfold((0, 1)) { case (a, b) => Some(b -> (b, a + b)) }
 

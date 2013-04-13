@@ -5,7 +5,7 @@ import java.util.regex.{ Pattern, PatternSyntaxException }
 trait Chapter4 {
 
   sealed trait Option[+A] {
-    // Excercise 1
+    // Exercise 1
     def map[B](f: A => B): Option[B] = this match {
       case None => None
       case Some(v) => Some(f(v))
@@ -30,7 +30,7 @@ trait Chapter4 {
   case object None extends Option[Nothing]
   case class Some[A](get: A) extends Option[A]
 
-  // Excercise 2
+  // Exercise 2
   def mean(xs: Seq[Double]): Option[Double] =
     if (xs.isEmpty) None
     else Some(xs.sum / xs.size)
@@ -38,14 +38,14 @@ trait Chapter4 {
   def variance(xs: Seq[Double]): Option[Double] =
     mean(xs) flatMap { m => mean(xs.map(x => math.pow(x - m, 2))) }
 
-  // Excercise 3
+  // Exercise 3
   def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
     for {
       aa <- a
       bb <- b
     } yield f(aa, bb)
 
-  // Excercise 4
+  // Exercise 4
   def pattern(s: String): Option[Pattern] =
     try { Some(Pattern.compile(s)) }
     catch { case _: PatternSyntaxException => None }
@@ -56,7 +56,7 @@ trait Chapter4 {
   def bothMatch_2(pat1: String, pat2: String, s: String): Option[Boolean] =
     map2(mkMatcher(pat1), mkMatcher(pat2))(_(s) && _(s))
 
-  // Excercise 5
+  // Exercise 5
   def sequence0[A](a: List[Option[A]]): Option[List[A]] =
     try { Some(a map { _.getOrElse(throw new Exception) }) }
     catch { case _: Exception => None }
@@ -74,7 +74,7 @@ trait Chapter4 {
   def sequence[A](a: List[Option[A]]): Option[List[A]] =
     a.foldRight(Some(Nil): Option[List[A]]) { (o, acc) => map2(o, acc)(_ :: _) }
 
-  // Ecxercise 6
+  // Exercise 6
   def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] =
     a.foldRight(Some(Nil): Option[List[B]]) { (a, acc) =>
       for {
@@ -84,7 +84,7 @@ trait Chapter4 {
     }
 
   sealed trait Either[+E, +A] {
-    // Excercise 7
+    // Exercise 7
     def map[B](f: A => B): Either[E, B] = this match {
       case Left(e) => Left(e)
       case Right(a) => Right(f(a))
@@ -110,7 +110,7 @@ trait Chapter4 {
   case class Left[+E](value: E) extends Either[E, Nothing]
   case class Right[+A](value: A) extends Either[Nothing, A]
 
-  // Excercise 8
+  // Exercise 8
   object Eihter {
     def sequence0[E, A](a: List[Either[E, A]]): Either[E, List[A]] =
       a.foldRight(Right(Nil): Either[E, List[A]]) { (a, acc) => a.map2(acc)(_ :: _) }
@@ -122,7 +122,7 @@ trait Chapter4 {
       traverse(a)(identity)
   }
 
-  // Excercise 9
+  // Exercise 9
   case class Person(name: Name, age: Age)
   sealed class Name(val value: String)
   sealed class Age(val value: Int)

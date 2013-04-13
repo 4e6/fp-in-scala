@@ -1,6 +1,6 @@
 name := "fp-in-scala"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 

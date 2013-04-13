@@ -7,35 +7,35 @@ trait Chapter2 {
   def greaterBy(x: Box, y: Box, f: Box => Double): Box =
     if (f(x) > f(y)) x else y
 
-  // Excercise 1
+  // Exercise 1
   def wider(x: Box, y: Box): Box =
     greaterBy(x, y, _.width)
 
   def taller(x: Box, y: Box): Box =
     greaterBy(x, y, _.height)
 
-  // Excercise 2
+  // Exercise 2
   def abs(x: Int): Int =
     if (x > 0) x else -x
 
   def absolute0(f: Int => Int): Int => Int =
     x => abs(f(x))
 
-  // Excercise 3
+  // Exercise 3
   def absolute[A](f: A => Int): A => Int =
     x => abs(f(x))
 
-  // Excercise 4
+  // Exercise 4
   type Pred[A] = A => Boolean
 
   def divisibleBy(k: Int): Pred[Int] =
     x => x % k == 0
 
-  // Excercise 5
+  // Exercise 5
   def even(x: Int): Boolean =
     divisibleBy(2)(x)
 
-  // Excercise 6
+  // Exercise 6
   def lift0[A](f: (Boolean, Boolean) => Boolean, g: Pred[A], h: Pred[A]): Pred[A] =
     x => f(g(x), h(x))
 
@@ -45,15 +45,15 @@ trait Chapter2 {
   def divisibleBy_3or5(x: Int): Boolean =
     lift0(_ || _, divisibleBy(3), divisibleBy(5))(x)
 
-  // Excercise 7
+  // Exercise 7
   def curry[A, B, C](f: (A, B) => C): A => B => C =
     x => f(x, _)
 
-  // Excercise 8
+  // Exercise 8
   def uncurry[A, B, C](f: A => B => C): (A, B) => C =
     (x, y) => f(x)(y)
 
-  // Excercise 9
+  // Exercise 9
   def compose[A, B, C](f: B => C, g: A => B): A => C =
     x => f(g(x))
 
@@ -61,12 +61,12 @@ trait Chapter2 {
   def lift[A, B, C, D](f: (B, C) => D)(g: A => B, h: A => C): A => D =
     x => f(g(x), h(x))
 
-  // Excercise 10
+  // Exercise 10
   def lift3[A, B, C, D, E](f: (B, C, D) => E)
     (g: A => B, h: A => C, i: A => D): A => E =
     x => f(g(x), h(x), i(x))
 
-  // Excercise 11
+  // Exercise 11
   def lift3a[A, B, C, D, E](f: (B, C, D) => E)
     (g: A => B, h: A => C, i: A => D): A => E =
     x => lift[A, C, D, E](f(g(x), _, _))(h, i)(x)
@@ -83,7 +83,7 @@ trait Chapter2 {
     }
   }
 
-  // Excercise 13
+  // Exercise 13
   def iterateWhile[A](a: A)(f: A => A, p: Pred[A]): A =
     if (p(f(a))) iterateWhile(f(a))(f, p)
     else f(a)
