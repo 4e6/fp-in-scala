@@ -34,8 +34,11 @@ trait Chapter5 {
     def foldRight[B](z: => B)(f: (A, => B) => B): B =
       uncons match {
         case Some((h, t)) => f(h, t.foldRight(z)(f))
-        case _ => z
+        case None => z
       }
+
+    def exists(p: A => Boolean): Boolean =
+      foldRight(false)(p(_) || _)
 
     def forAll(p: A => Boolean): Boolean =
       foldRight(true)(p(_) && _)
@@ -57,6 +60,24 @@ trait Chapter5 {
     def flatMap[B](f: A => Stream[B]): Stream[B] =
       foldRight(empty[B])((a, as) => f(a) append as)
 
+    // Excercise 12
+    def mapU[B](f: A => B): Stream[B] =
+      unfold(this)(s => s.uncons.map { case (h, t) => f(h) -> t })
+
+    def takeU(n: Int): Stream[A] =
+      unfold(n -> this) { case (n, s) => if (n > 0) s.uncons.map(ht => ht._1 -> (n - 1, ht._2)) else None }
+
+    def takeWhileU(p: A => Boolean): Stream[A] =
+      unfold(this)(s => s.uncons.filter { case (h, t) => p(h) })
+
+    def zip[B, C](s: Stream[B])(f: (A, B) => C): Stream[C] =
+      unfold(this -> s) { case (s1, s2) =>
+          for {
+            (a, t1) <- s1.uncons
+            (b, t2) <- s2.uncons
+          } yield f(a, b) -> (t1, t2)
+      }
+
   }
 
   object Stream {
@@ -71,6 +92,49 @@ trait Chapter5 {
       if (as.isEmpty) empty
       else cons(as.head, apply(as.tail: _*))
   }
+
+  def ones: Stream[Int] =
+    Stream.cons(1, ones)
+
+  // Excercise 7
+  def constant[A](a: A): Stream[A] =
+    Stream.cons(a, constant(a))
+
+  // Excercise 8
+  def from(n: Int): Stream[Int] =
+    Stream.cons(n, from(n + 1))
+
+  // Excercise 9
+  def fibs: Stream[Int] = {
+    import Stream._
+    def recur(a: Int, b: Int): Stream[Int] =
+      cons(b, recur(b, a + b))
+
+    cons(0, recur(0, 1))
+  }
+
+  // Excercise 10
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
+    f(z).fold(Stream.empty[A]) {
+      case (a, s) => Stream.cons(a, unfold(s)(f))
+    }
+
+  trait WithUnfold {
+    // Excercise 11
+    def fibs: Stream[Int] =
+      unfold((0, 1)) { case (a, b) => Some(b -> (b, a + b)) }
+
+    def from(n: Int): Stream[Int] =
+      unfold(n)(s => Some(s, s + 1))
+
+    def constant[A](a: A): Stream[A] =
+      unfold(a)(s => Some(s, s))
+
+    def ones: Stream[Int] =
+      unfold(1)(_ => Some(1, 1))
+  }
+
+  object unfolded extends WithUnfold
 
 }
 
