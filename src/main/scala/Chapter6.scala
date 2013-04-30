@@ -76,6 +76,98 @@ trait Chapter6 {
   // Exercise 5
   def positiveMax(n: Int): Rand[Int] =
     map(positiveInt)(_ / (Int.MaxValue / n))
+
+  // Exercise 6
+  def doubleM: Rand[Double] =
+    map(positiveInt)(_ / (Int.MaxValue.toDouble + 1))
+
+  // Exercise 7
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng => {
+      val (a, rng1) = ra(rng)
+      val (b, rng2) = rb(rng1)
+      f(a, b) -> rng2
+    }
+
+  def intDoubleM: Rand[(Int, Double)] =
+    map2(_.nextInt, double)(_ -> _)
+
+  def doubleIntM: Rand[(Double, Int)] =
+    map2(double, _.nextInt)(_ -> _)
+
+  // Exercise 8
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
+    fs.foldRight(unit(List.empty[A])) {
+      (r, acc) => map2(r, acc)(_ :: _)
+    }
+
+  def intsS(count: Int): Rand[List[Int]] =
+    sequence(List.fill(count)(int))
+
+  // Exercise 9
+  def flatMap[A, B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
+    rng => {
+      val (a, rng1) = f(rng)
+      g(a)(rng1)
+    }
+
+  def positiveIntF: Rand[Int] =
+    flatMap(int) { i =>
+      if (i != Int.MinValue) unit(i.abs) else positiveIntF
+    }
+
+  // Exercise 10
+  def mapF[A, B](s: Rand[A])(f: A => B): Rand[B] =
+    flatMap(s)(a => unit(f(a)))
+
+  def map2F[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    flatMap(ra) { a => mapF(rb)(f(a, _)) }
+
+  // Exercise 11
+  case class State[S, +A](run: S => (A, S)) {
+
+    def flatMap[B](f: A => State[S, B]): State[S, B] =
+      State { s =>
+        val (a, s2) = run(s)
+        f(a).run(s2)
+      }
+
+    def map[B](f: A => B): State[S, B] =
+      flatMap(a => State.unit(f(a)))
+
+    def map2[B, C](s: State[S, B])(f: (A, B) => C): State[S, C] =
+      flatMap(a => s.map(f(a, _)))
+
+  }
+
+  object State {
+    def unit[S, B](a: B): State[S, B] =
+      State(s => (a, s))
+
+    def sequence[S, A](fs: List[State[S, A]]): State[S, List[A]] =
+      fs.foldRight(unit[S, List[A]](Nil)) { (s, acc) =>
+        s.map2(acc)(_ :: _)
+      }
+
+    // Exsercise 12
+    def get[S]: State[S, S] =
+      State(s => s -> s)
+
+    def set[S](s: S): State[S, Unit] =
+      State(_ => () -> s)
+
+    def modify[S](f: S => S): State[S, Unit] = for {
+      s <- get
+      _ <- set(f(s))
+    } yield ()
+  }
+
+  // Exercise 13
+  sealed trait Input
+  case object Coin extends Input
+  case object Turn extends Input
+
+  case class Machine(locked: Boolean, candies: Int, coins: Int)
 }
 
 object ch6 extends Chapter6
